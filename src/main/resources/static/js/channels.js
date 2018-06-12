@@ -40,6 +40,8 @@ $(document).ready(function () {
             }, 6000);
         }else if('channel_mark' == data.type){
             markAsRead(data.channelId);
+        }else if('upload_file' == data.type){
+            showMessage(data);
         }
     };
 
@@ -57,9 +59,11 @@ $(document).ready(function () {
         }
     });
 
+
     $("#chatInput").keydown(function(e) {
         typingAlarm();
     });
+
 });
 
 function typingAlarm() {
@@ -99,11 +103,13 @@ function disconnect() {
 function showMessage(data) {
     if('system' == data.type){
         $('#messages_'+data.channelId).append(data.text + '\n');
+    }else if('upload_file' == data.type){
+        $('#messages_'+data.channelId).append("[" + data.nickname + "] "+"fileupload"+" (download)" + '\n');
     }else {
         $('#messages_'+data.channelId).append("[" + data.nickname + "] " + data.text + '\n');
     }
     var textArea = $('#messages_'+data.channelId);
-    textArea.scrollTop( textArea[0].scrollHeight - textArea.height() );
+    // textArea.scrollTop( textArea[0].scrollHeight - textArea.height() );
 }
 
 function getFormData($form){
