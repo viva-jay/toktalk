@@ -45,13 +45,11 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
     }
 
     @Override
-    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+    public void afterConnectionEstablished(WebSocketSession session) {
         Map<String, Object> attributes = session.getAttributes();
 
-        session.sendMessage(new TextMessage("hi"));
-        
         logger.info("새로운 웹소켓 세션 id : " + session.getId());
-        Long userId = (Long) attributes.get("userId");
+        Long userId = userIdFrom(attributes);
         sessionManager.addWebSocketSession(userId, session);
 
         // Redis 웹소켓세션 등록
@@ -84,26 +82,18 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
     }
 
     private void notifyInvitation(HashMap<String, Object> map) {
-        Long channelId = Long.parseLong(Optional.ofNullable(channelIdFrom(map)).orElse("0"));
-        Long userId = Long.parseLong(Optional.ofNullable(userIdFrom(map)).orElse("0"));
+        Long channelId = channelIdFrom(map);
+        Long userId = userIdFrom(map);
         Channel channel = channelService.getChannel(channelId);
         channel.setName(channel.getFirstUserName());
         messageSender.sendMessage(SocketMessage.channelJoinAlarm(SendType.CHANNEL_JOINED, userId, channel));
     }
 
     private void inviteMember(HashMap<String, Object> map) {
-        Long channelId = Long.parseLong(channelIdFrom(map));
+        Long invitedUserId = userIdFrom(map);
+        Long channelId = channelIdFrom(map);
         Channel channel = channelService.getChannel(channelId);
-        Long invitedUserId = Long.parseLong(userIdFrom(map));
-
-        /*if(map.get("nickname") != null){
-            addNewChannelUser(map.get("nickname").toString(), invitedUserId, channelId);
-        }else {
-            addNewChannelUser(null, invitedUserId, channelId);
-        }*/
-
-        addNewChannelUser(map.get("nickname").toString(), invitedUserId, channelId);
-
+        addNewChannelUser(stringOf(map, "nickname"), invitedUserId, channelId);
         messageSender.sendMessage(SocketMessage.channelJoinAlarm(SendType.CHANNEL_JOINED, invitedUserId, channel));
     }
 
@@ -117,12 +107,12 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
 
     void switchChannel(WebSocketSession session, HashMap<String, Object> map) throws Exception {
         Map<String, Object> attributes = session.getAttributes();
-        String username = attributes.get("username").toString();
-        String nickname = attributes.get("nickname").toString();
-        Long userId = Long.parseLong(attributes.get("userId").toString());
+        String username = stringOf(attributes, "username");
+        String nickname = stringOf(attributes, "nickname");
+        Long userId = userIdFrom(attributes);
         User user = userService.findUserByEmail(username);
 
-        Long channelId = Long.parseLong(map.get("channelId").toString());
+        Long channelId = channelIdFrom(map);
 
         /*
          *   switch 하기 전 active channel 의 lastReadCnt 를 업데이트
@@ -196,13 +186,13 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
     }
 
     private void handleChatMessage(WebSocketSession session, HashMap<String, Object> map) {
-        Long channelId = Long.parseLong(channelIdFrom(map));
+        Long channelId = channelIdFrom(map);
         String message = stringOf(map, "text");
         String channelType = stringOf(map, "channelType");
 
         Map<String, Object> attributes = session.getAttributes();
-        Long userId = (Long) attributes.get("userId");
-        String nickname = (String) attributes.get("nickname");
+        Long userId = userIdFrom(attributes);
+        String nickname = stringOf(attributes, "nickname");
 
         messageService.addMessage(Message.builder()
                 .userId(userId).nickname(nickname).channelId(channelId).channelType(ChannelType.valueOf(channelType)).text(message)
@@ -216,7 +206,7 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         Map<String, Object> attributes = session.getAttributes();
-        Long userId = (Long) attributes.get("userId");
+        Long userId = userIdFrom(attributes);
         sessionManager.removeWebSocketSession(userId, session);
 
         // 마지막으로 보고 있던 채널의 lastReadCnt 를 업데이트
@@ -232,18 +222,18 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
         redisService.removeActiveChannelInfo(session);
     }
 
-    private String stringOf(Map map, String key) {
+    private String stringOf(Map<String, Object> map, String key) {
         Object obj = map.get(key);
         return obj instanceof String ? (String) obj : null;
     }
 
-    private String channelIdFrom(Map map) {
+    private Long channelIdFrom(Map<String, Object> map) {
         Object obj = map.get("channelId");
-        return obj instanceof String ? (String) obj : null;
+        return obj instanceof String ? Long.parseLong((String) obj) : 0;
     }
 
-    private String userIdFrom(Map map) {
+    private Long userIdFrom(Map<String, Object> map) {
         Object obj = map.get("userId");
-        return obj instanceof String ? (String) obj : null;
+        return obj instanceof String ? Long.parseLong((String) obj) : 0;
     }
 }
