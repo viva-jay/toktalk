@@ -23,4 +23,5 @@ public class WebSocketConfig implements WebSocketConfigurer{
                 .withSockJS()
                 .setInterceptors(new WebSocketHandshakeInterceptor());
     }
+
 }

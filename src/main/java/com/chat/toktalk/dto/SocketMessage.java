@@ -16,7 +16,7 @@ import java.util.List;
 @Setter
 @ToString
 public class SocketMessage implements Serializable {
-    private SendType type;
+    private final SendType type;
     private Long channelId;
     private Long userId;
     private String nickname;
@@ -26,11 +26,8 @@ public class SocketMessage implements Serializable {
     private List<UnreadMessageInfo> unreadMessages;
     private UploadFile uploadFile;
     private Channel channel;
-    private LocalDateTime date;
-    private String regdate;
-
-    public SocketMessage() {
-    }
+    private final LocalDateTime date;
+    private final String regdate;
 
     public SocketMessage(SendType type) {
         this.type = type;
@@ -38,13 +35,41 @@ public class SocketMessage implements Serializable {
         regdate = date.format(DateTimeFormatter.ofPattern("a h:mm"));
     }
 
- /*
-    public SocketMessage(Long channelId,String nickname, UploadFile uploadFile){
-        this.type = "upload_file";
-        this.channelId = channelId;
-        this.nickname = nickname;
-        this.uploadFile = uploadFile;
-        this.notification = false;
+    public static SocketMessage channelJoinAlarm(SendType type, Long userId, Channel channel) {
+        SocketMessage sm = new SocketMessage(type);
+        sm.setUserId(userId);
+        sm.setChannel(channel);
+        return sm;
     }
-*/
+
+    public static SocketMessage typingAlarm(SendType type, Long userId, Long channelId, String text) {
+        SocketMessage sm = new SocketMessage(type);
+        sm.setUserId(userId);
+        sm.setChannelId(channelId);
+        sm.setText(text);
+        return sm;
+    }
+
+    public static SocketMessage markAsReadAlarm(SendType type, Long userId, Long channelId) {
+        SocketMessage sm = new SocketMessage(type);
+        sm.setUserId(userId);
+        sm.setChannelId(channelId);
+        return sm;
+    }
+
+
+    public static SocketMessage systemAlarm(SendType type, Long channelId, String text) {
+        SocketMessage sm = new SocketMessage(type);
+        sm.setChannelId(channelId);
+        sm.setText(text);
+        return sm;
+    }
+
+    public static SocketMessage chatAlarm(SendType type, Long channelId, String text, String nickname) {
+        SocketMessage sm = new SocketMessage(type);
+        sm.setChannelId(channelId);
+        sm.setText(text);
+        sm.setNickname(nickname);
+        return sm;
+    }
 }

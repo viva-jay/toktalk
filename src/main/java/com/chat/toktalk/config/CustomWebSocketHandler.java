@@ -23,33 +23,29 @@ import java.util.Map;
 
 @Component
 public class CustomWebSocketHandler extends TextWebSocketHandler {
-    final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    @Autowired
-    SessionManager sessionManager;
+    private final SessionManager sessionManager;
+    private final MessageService messageService;
+    private final RedisService redisService;
+    private final UserService userService;
+    private final ChannelUserService channelUserService;
+    private final ChannelService channelService;
+    private final MessageSender messageSender;
+    private final UploadFileService uploadFileService;
 
-    @Autowired
-    MessageService messageService;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Autowired
-    RedisService redisService;
-
-    @Autowired
-    UserService userService;
-
-    @Autowired
-    ChannelUserService channelUserService;
-
-    @Autowired
-    ChannelService channelService;
-
-    @Autowired
-    MessageSender messageSender;
-
-    @Autowired
-    UploadFileService uploadFileService;
-
-    ObjectMapper objectMapper = new ObjectMapper();
+    public CustomWebSocketHandler(SessionManager sessionManager, MessageService messageService, RedisService redisService, UserService userService, ChannelUserService channelUserService, ChannelService channelService, MessageSender messageSender, UploadFileService uploadFileService) {
+        this.sessionManager = sessionManager;
+        this.messageService = messageService;
+        this.redisService = redisService;
+        this.userService = userService;
+        this.channelUserService = channelUserService;
+        this.channelService = channelService;
+        this.messageSender = messageSender;
+        this.uploadFileService = uploadFileService;
+    }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -95,39 +91,32 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
         Long channelId = Long.parseLong(map.get("channelId").toString());
         Long userId = Long.parseLong(map.get("userId").toString());
         Channel channel = channelService.getChannel(channelId);
-
-        SocketMessage socketMessage = new SocketMessage(SendType.CHANNEL_JOINED);
-        socketMessage.setUserId(userId);
-        socketMessage.setChannel(channel);
         channel.setName(channel.getFirstUserName());
-        messageSender.sendMessage(socketMessage);
+        messageSender.sendMessage(SocketMessage.channelJoinAlarm(SendType.CHANNEL_JOINED, userId, channel));
     }
 
     private void inviteMember(HashMap<String, Object> map) {
         Long channelId = Long.parseLong(map.get("channelId").toString());
         Channel channel = channelService.getChannel(channelId);
         Long invitedUserId = Long.parseLong(map.get("userId").toString());
-        if(map.get("nickname") != null){
+
+        /*if(map.get("nickname") != null){
             addNewChannelUser(map.get("nickname").toString(), invitedUserId, channelId);
         }else {
             addNewChannelUser(null, invitedUserId, channelId);
-        }
-        SocketMessage socketMessage = new SocketMessage(SendType.CHANNEL_JOINED);
-        socketMessage.setUserId(invitedUserId);
-        socketMessage.setChannel(channel);
-        messageSender.sendMessage(socketMessage);
+        }*/
+
+        addNewChannelUser(map.get("nickname").toString(), invitedUserId, channelId);
+
+        messageSender.sendMessage(SocketMessage.channelJoinAlarm(SendType.CHANNEL_JOINED, invitedUserId, channel));
     }
 
     private void alertTyping(WebSocketSession session) {
         Long channelId = redisService.getActiveChannelInfo(session);
         String nickname = (String) session.getAttributes().get("nickname");
         Long userId = Long.parseLong(session.getAttributes().get("userId").toString());
-        String typingAlarm = nickname+" is typing";
-        SocketMessage socketMessage = new SocketMessage(SendType.TYPING);
-        socketMessage.setChannelId(channelId);
-        socketMessage.setUserId(userId);
-        socketMessage.setText(typingAlarm);
-        messageSender.sendMessage(socketMessage);
+        String typingAlarm = nickname + "님이 입력 중";
+        messageSender.sendMessage(SocketMessage.typingAlarm(SendType.TYPING, userId, channelId, typingAlarm));
     }
 
     void switchChannel(WebSocketSession session, HashMap<String, Object> map) throws Exception {
@@ -183,10 +172,7 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
             }
 
             // 이 유저가 가진 웹소켓세션에도 이 채널 unread mark 지우라고 해야함
-            SocketMessage socketMessage = new SocketMessage(SendType.CHANNEL_MARK);
-            socketMessage.setChannelId(channelId);
-            socketMessage.setUserId(user.getId());
-            messageSender.sendMessage(socketMessage);
+            messageSender.sendMessage(SocketMessage.markAsReadAlarm(SendType.CHANNEL_MARK, user.getId(), channelId));
 
 
         // 새롭게 채널에 합류한 유저
@@ -212,10 +198,7 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
             channelUser.setFirstReadId(saved.getId());
             channelUserService.updateChannelUser(channelUser);
 
-            SocketMessage socketMessage = new SocketMessage(SendType.SYSTEM);
-            socketMessage.setChannelId(channelId);
-            socketMessage.setText(systemMsg);
-            messageSender.sendMessage(socketMessage);
+            messageSender.sendMessage(SocketMessage.systemAlarm(SendType.SYSTEM, channelId, systemMsg));
         }
     }
 
@@ -238,11 +221,7 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
         messageService.addMessage(newMessage);
 
         // 2. 메세지큐에 내보내기
-        SocketMessage socketMessage = new SocketMessage(SendType.CHAT);
-        socketMessage.setChannelId(channelId);
-        socketMessage.setText(message);
-        socketMessage.setNickname(nickname);
-        messageSender.sendMessage(socketMessage);
+        messageSender.sendMessage(SocketMessage.chatAlarm(SendType.CHAT, channelId, message, nickname));
 
         // 3. 첨부파일 있으면 보내기
 

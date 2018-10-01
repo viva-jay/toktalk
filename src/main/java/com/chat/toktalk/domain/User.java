@@ -78,6 +78,4 @@ public class User implements Serializable {
             oauthInfo.setUser(this);
         }
     }
-
-
 }
