@@ -1,6 +1,7 @@
 package com.chat.toktalk.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Builder;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 import lombok.Getter;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 @Table(name = "messages")
 @Getter
 @Setter
+@Builder
 public class Message implements Serializable {
     public Message() {
         this.regdate = LocalDateTime.now();

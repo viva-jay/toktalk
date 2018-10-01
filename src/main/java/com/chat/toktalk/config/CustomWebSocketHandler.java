@@ -10,16 +10,13 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Component
 public class CustomWebSocketHandler extends TextWebSocketHandler {
@@ -65,8 +62,7 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         TypeReference<HashMap<String,Object>> typeRef = new TypeReference<HashMap<String,Object>>(){};
         HashMap<String, Object> map = objectMapper.readValue(message.getPayload(), typeRef);
-        String type = (String) map.get("type");
-
+        String type = stringOf(map, "type");
         if("pong".equals(type)) {
             return;
         }
@@ -88,17 +84,17 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
     }
 
     private void notifyInvitation(HashMap<String, Object> map) {
-        Long channelId = Long.parseLong(map.get("channelId").toString());
-        Long userId = Long.parseLong(map.get("userId").toString());
+        Long channelId = Long.parseLong(Optional.ofNullable(channelIdFrom(map)).orElse("0"));
+        Long userId = Long.parseLong(Optional.ofNullable(userIdFrom(map)).orElse("0"));
         Channel channel = channelService.getChannel(channelId);
         channel.setName(channel.getFirstUserName());
         messageSender.sendMessage(SocketMessage.channelJoinAlarm(SendType.CHANNEL_JOINED, userId, channel));
     }
 
     private void inviteMember(HashMap<String, Object> map) {
-        Long channelId = Long.parseLong(map.get("channelId").toString());
+        Long channelId = Long.parseLong(channelIdFrom(map));
         Channel channel = channelService.getChannel(channelId);
-        Long invitedUserId = Long.parseLong(map.get("userId").toString());
+        Long invitedUserId = Long.parseLong(userIdFrom(map));
 
         /*if(map.get("nickname") != null){
             addNewChannelUser(map.get("nickname").toString(), invitedUserId, channelId);
@@ -186,45 +182,35 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
         channelUserService.addChannelUser(channelUser, userId, channelId);
 
         // 입장메세지 (채널 최초 생성 시 초대된 멤버는 입장메세지 X)
-        if(nickname != null){
-            String systemMsg = "[알림] \"" + nickname + "\" 님이 입장하셨습니다.";
-            Message messageNew = new Message();
-            messageNew.setType("system");
-            messageNew.setChannelId(channelId);
-            messageNew.setText(systemMsg);
-            Message saved = messageService.addMessage(messageNew);
+        if (Objects.nonNull(nickname)) {
+            String notice = "[알림] \"" + nickname + "\" 님이 입장하셨습니다.";
+            Message saved =
+                    messageService.addMessage(Message.builder().type("system").channelId(channelId).text(notice).build());
 
             // firstReadId 업데이트
             channelUser.setFirstReadId(saved.getId());
             channelUserService.updateChannelUser(channelUser);
 
-            messageSender.sendMessage(SocketMessage.systemAlarm(SendType.SYSTEM, channelId, systemMsg));
+            messageSender.sendMessage(SocketMessage.systemAlarm(SendType.SYSTEM, channelId, notice));
         }
     }
 
     private void handleChatMessage(WebSocketSession session, HashMap<String, Object> map) {
-        Long channelId = new Long(map.get("channelId").toString());
-        String message = (String) map.get("text");
-        String channelType = (String) map.get("channelType");
+        Long channelId = Long.parseLong(channelIdFrom(map));
+        String message = stringOf(map, "text");
+        String channelType = stringOf(map, "channelType");
 
         Map<String, Object> attributes = session.getAttributes();
         Long userId = (Long) attributes.get("userId");
         String nickname = (String) attributes.get("nickname");
 
-        // 1. 새 Message 엔티티 DB에 저장
-        Message newMessage = new Message();
-        newMessage.setUserId(userId);
-        newMessage.setNickname(nickname);
-        newMessage.setChannelId(channelId);
-        newMessage.setChannelType(ChannelType.valueOf(channelType));
-        newMessage.setText(message);
-        messageService.addMessage(newMessage);
+        messageService.addMessage(Message.builder()
+                .userId(userId).nickname(nickname).channelId(channelId).channelType(ChannelType.valueOf(channelType)).text(message)
+                .build());
 
-        // 2. 메세지큐에 내보내기
         messageSender.sendMessage(SocketMessage.chatAlarm(SendType.CHAT, channelId, message, nickname));
 
-        // 3. 첨부파일 있으면 보내기
-
+        // TODO 첨부파일 있으면 보내기
     }
 
     @Override
@@ -244,5 +230,20 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
         // Redis 웹소켓세션 삭제
         redisService.removeWebSocketSessionByUser(userId, session);
         redisService.removeActiveChannelInfo(session);
+    }
+
+    private String stringOf(Map map, String key) {
+        Object obj = map.get(key);
+        return obj instanceof String ? (String) obj : null;
+    }
+
+    private String channelIdFrom(Map map) {
+        Object obj = map.get("channelId");
+        return obj instanceof String ? (String) obj : null;
+    }
+
+    private String userIdFrom(Map map) {
+        Object obj = map.get("userId");
+        return obj instanceof String ? (String) obj : null;
     }
 }
