@@ -170,6 +170,7 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
     private void addNewChannelUser(String nickname, Long userId, Long channelId) {
         ChannelUser channelUser = new ChannelUser();
         channelUserService.addChannelUser(channelUser, userId, channelId);
+        // String channelType = stringOf(map, "channelType");
 
         // 입장메세지 (채널 최초 생성 시 초대된 멤버는 입장메세지 X)
         if (Objects.nonNull(nickname)) {
@@ -229,11 +230,13 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
 
     private Long channelIdFrom(Map<String, Object> map) {
         Object obj = map.get("channelId");
-        return obj instanceof String ? Long.parseLong((String) obj) : 0;
+        String str = obj.toString();
+        return str != null ? Long.parseLong(str) : 0;
     }
 
     private Long userIdFrom(Map<String, Object> map) {
         Object obj = map.get("userId");
-        return obj instanceof String ? Long.parseLong((String) obj) : 0;
+        String str = obj.toString();
+        return str != null ? Long.parseLong(str) : 0;
     }
 }
