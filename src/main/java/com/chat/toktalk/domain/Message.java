@@ -15,8 +15,19 @@ import java.time.LocalDateTime;
 @Table(name = "messages")
 @Getter
 @Setter
-@Builder
 public class Message implements Serializable {
+
+    @Builder
+    public Message(Long userId, String nickname, Long channelId, ChannelType channelType, String text, String type) {
+        this.userId = userId;
+        this.nickname = nickname;
+        this.channelId = channelId;
+        this.channelType = channelType;
+        this.text = text;
+        this.type = type;
+        this.regdate = LocalDateTime.now();
+    }
+
     public Message() {
         this.regdate = LocalDateTime.now();
     }
