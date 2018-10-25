@@ -31,7 +31,7 @@ public class PasswordResetTokenRepositoryTest {
         resetToken.setExpiryDate(30);
         tokenRepository.save(resetToken);
 
-        PasswordResetToken resultToken =tokenRepository.findByToken(uuid);
+        PasswordResetToken resultToken = tokenRepository.findByToken(uuid);
         User resultUser = resetToken.getUser();
 
         assertEquals(resultToken.getToken(),uuid);

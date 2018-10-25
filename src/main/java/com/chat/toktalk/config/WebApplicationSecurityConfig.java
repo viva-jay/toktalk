@@ -25,6 +25,7 @@ public class WebApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
     private final Filter filter;
     private final TokTalkUserDetailsService tokTalkUserDetailsService;
     private final DataSource dataSource;
+    private static final String REMEMBER_ME_KEY = "cofig-rmkey-BTg2jlnBOQ3lfS5Og5qmFbcfjMl79jfswlaG";
 
     public WebApplicationSecurityConfig(Filter googleFilter, DataSource dataSource, TokTalkUserDetailsService tokTalkUserDetailsService) {
         this.filter = googleFilter;
@@ -59,6 +60,7 @@ public class WebApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
                 .passwordParameter("password")
                 .and().rememberMe()
                 .rememberMeCookieName("remember-me")
+                .key(REMEMBER_ME_KEY)
                 .userDetailsService(tokTalkUserDetailsService)
                 .tokenValiditySeconds(24 * 60 * 60) //1day
                 .tokenRepository(persistentTokenRepository())
