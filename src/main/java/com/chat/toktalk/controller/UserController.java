@@ -9,6 +9,7 @@ import com.chat.toktalk.service.UserService;
 import com.chat.toktalk.validator.PasswordValidator;
 import com.chat.toktalk.validator.UserDetailsValidator;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientAutoConfiguration;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -20,6 +21,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 @RequestMapping("/users")
 public class UserController {
+
+
 
     private final UserService userService;
     private final PasswordService passwordService;
@@ -62,7 +65,10 @@ public class UserController {
 
     @PostMapping("/")
     public String processAccountForm(UserDetailsForm detailsForm, BindingResult bindingResult, RedirectAttributes attributes){
-        userDetailsValidator.validate(detailsForm,bindingResult);
+       userDetailsValidator.validate(detailsForm,bindingResult);
+        //TODO
+            //UserValidator로변경
+            //UserValidator의 구성은 수정과 가입 폼 똑같
         User user = userService.findUserByEmail(detailsForm.getEmail());
         if(bindingResult.hasErrors()){
             return "users/my-account";

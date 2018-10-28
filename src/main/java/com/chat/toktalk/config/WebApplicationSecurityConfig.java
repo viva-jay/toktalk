@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,15 +21,16 @@ import javax.servlet.Filter;
 import javax.sql.DataSource;
 
 @Configuration
+@EnableWebSecurity
 public class WebApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 
-    private final Filter filter;
+//    private final Filter filter;
     private final TokTalkUserDetailsService tokTalkUserDetailsService;
     private final DataSource dataSource;
     private static final String REMEMBER_ME_KEY = "cofig-rmkey-BTg2jlnBOQ3lfS5Og5qmFbcfjMl79jfswlaG";
 
-    public WebApplicationSecurityConfig(Filter googleFilter, DataSource dataSource, TokTalkUserDetailsService tokTalkUserDetailsService) {
-        this.filter = googleFilter;
+    public WebApplicationSecurityConfig(DataSource dataSource, TokTalkUserDetailsService tokTalkUserDetailsService) {
+//        this.filter = googleFilter;
         this.dataSource = dataSource;
         this.tokTalkUserDetailsService = tokTalkUserDetailsService;
     }
@@ -44,31 +46,40 @@ public class WebApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.logout().logoutRequestMatcher(new AntPathRequestMatcher("/logout")).logoutSuccessUrl("/users/login")
-                .and().authorizeRequests()
-                .antMatchers("/identity/**").permitAll()
-                .antMatchers("/users/login").permitAll()
-                .antMatchers("/users/**").authenticated()
-                .antMatchers("/h2-console/**").permitAll()
-                .antMatchers("/api/**").authenticated()
-                .anyRequest().hasAnyRole("ADMIN", "USER")
-                .and().headers().frameOptions().disable()
-                .and().formLogin()
-                .loginProcessingUrl("/users/login")
-                .loginPage("/users/login")
-                .usernameParameter("email")
-                .passwordParameter("password")
-                .and().rememberMe()
-                .rememberMeCookieName("remember-me")
-                .key(REMEMBER_ME_KEY)
-                .userDetailsService(tokTalkUserDetailsService)
-                .tokenValiditySeconds(24 * 60 * 60) //1day
-                .tokenRepository(persistentTokenRepository())
-                .and().csrf()
-                .disable()
-                .addFilterBefore(new AlreadyLoginCheckFilter(), BasicAuthenticationFilter.class)
-                .addFilterBefore(filter, BasicAuthenticationFilter.class);
-    }
+        http
+                .authorizeRequests()
+                    .antMatchers("/identity/**").permitAll()
+                    .antMatchers("/users/login").permitAll()
+                    .antMatchers("/users/**").authenticated()
+                    .antMatchers("/h2-console/**").permitAll()
+                    .antMatchers("/api/**").authenticated()
+                    .anyRequest().hasAnyRole("ADMIN", "USER")
+                .and()
+                    .headers().frameOptions().disable()
+                .and()
+                    .formLogin()
+                    .loginProcessingUrl("/users/login")
+                    .loginPage("/users/login")
+                    .usernameParameter("email")
+                    .passwordParameter("password")
+                .and()
+                    .oauth2Login()
+                .and()
+                    .logout()
+                    .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                    .logoutSuccessUrl("/users/login")
+                .and()
+                    .rememberMe()
+                    .rememberMeCookieName("remember-me")
+                    .key(REMEMBER_ME_KEY)
+                    .userDetailsService(tokTalkUserDetailsService)
+                    .tokenValiditySeconds(24 * 60 * 60) //1day
+                    .tokenRepository(persistentTokenRepository())
+                .and()
+                    .addFilterBefore(new AlreadyLoginCheckFilter(), BasicAuthenticationFilter.class)
+//                    .addFilterBefore(filter, BasicAuthenticationFilter.class)
+                    .csrf().disable();
+        }
 
 
     @Bean
