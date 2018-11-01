@@ -22,4 +22,5 @@ http://ec2-13-124-151-134.ap-northeast-2.compute.amazonaws.com
 - Docker
 
 ## 동영상
-[![youtube](https://www.youtube.com/upload_thumbnail?v=ZQN06i6cYBY&t=hqdefault&ts=1541047570150)](https://youtu.be/ZQN06i6cYBY)
+
+[![youtube](http://img.youtube.com/vi/ZQN06i6cYBY/0.jpg)](https://www.youtube.com/watch?v=ZQN06i6cYBY)
