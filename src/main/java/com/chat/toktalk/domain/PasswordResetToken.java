@@ -24,7 +24,7 @@ public class PasswordResetToken implements Serializable {
     @Column(name = "expiry_date")
     Date expiryDate;
 
-    @OneToOne(targetEntity = User.class,cascade={CascadeType.ALL})
+    @OneToOne(targetEntity = User.class,cascade={CascadeType.PERSIST})
     @JoinColumn(name = "user_id")
     User user;
 

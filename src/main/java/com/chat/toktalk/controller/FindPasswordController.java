@@ -71,10 +71,14 @@ public class FindPasswordController {
             return "users/forgot-password";
         }
         User user = userService.findUserByEmail(emailForm.getEmail());
-        PasswordResetToken resetToken = new PasswordResetToken();
+
+        PasswordResetToken resetToken = passwordService.findByUser(user);
+        if(resetToken == null){
+            resetToken = new PasswordResetToken();
+            resetToken.setUser(user);
+        }
         resetToken.setToken(UUID.randomUUID().toString());
         resetToken.setExpiryDate(30);
-        resetToken.setUser(user);
 
         passwordService.savePasswordResetToken(resetToken);
 
