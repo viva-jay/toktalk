@@ -23,3 +23,4 @@ http://ec2-13-124-151-134.ap-northeast-2.compute.amazonaws.com
 
 ## 미리보기
 ![shop01](./img/preview01.png)
+![youtube](https://youtu.be/ZQN06i6cYBY)
