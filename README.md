@@ -1,5 +1,5 @@
 # TOKTALK
-
+![shop01](./img/preview01.png)
 ## 소개
 - 웹소켓 기반 SPA 메신저 서비스
 
@@ -21,5 +21,6 @@ http://ec2-13-124-151-134.ap-northeast-2.compute.amazonaws.com
 - NginX
 - Docker
 
-## 미리보기
-![shop01](./img/preview01.png)
+## 동영상
+
+[![youtube](http://img.youtube.com/vi/ZQN06i6cYBY/0.jpg)](https://www.youtube.com/watch?v=ZQN06i6cYBY)
