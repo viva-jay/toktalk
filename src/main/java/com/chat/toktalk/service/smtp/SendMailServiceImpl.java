@@ -23,7 +23,7 @@ public class SendMailServiceImpl implements SendMailService {
         MimeMessage message = javaMailSender.createMimeMessage();
         message.setSubject(subject);
         message.setText(content,"UTF-8","HTML");
-        message.setFrom("noriming2@gamil.com");
+        message.setFrom("toktalk.chat@gamil.com");
         message.setRecipients(Message.RecipientType.TO,email);//받는 사람
         javaMailSender.send(message);
 
