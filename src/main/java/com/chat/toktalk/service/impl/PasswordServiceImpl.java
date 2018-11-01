@@ -22,6 +22,14 @@ public class PasswordServiceImpl implements PasswordService {
         this.passwordResetTokenRepository = passwordResetTokenRepository;
     }
 
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public PasswordResetToken findByUser(User user) {
+       return passwordResetTokenRepository.findByUser(user);
+    }
+
     @Override
     @Transactional
     public void savePasswordResetToken(PasswordResetToken passwordResetToken){

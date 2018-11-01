@@ -11,6 +11,8 @@ public interface PasswordService {
 
     PasswordResetToken findByToken(String token);
 
+    PasswordResetToken findByUser(User user);
+
     void deletepasswordResetToken(PasswordResetToken passwordResetToken);
 
     void savePassword(User user, String password);
