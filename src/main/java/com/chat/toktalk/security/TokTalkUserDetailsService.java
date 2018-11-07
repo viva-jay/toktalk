@@ -2,6 +2,7 @@ package com.chat.toktalk.security;
 
 import com.chat.toktalk.domain.User;
 import com.chat.toktalk.service.UserService;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -13,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-
+@Log4j2
 @Component
 public class TokTalkUserDetailsService implements UserDetailsService {
     @Autowired
@@ -22,6 +23,7 @@ public class TokTalkUserDetailsService implements UserDetailsService {
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        log.info("User Details Service가 호출되었습니당....");
         User user = userService.findUserByEmail(username);
 
         if(user == null){

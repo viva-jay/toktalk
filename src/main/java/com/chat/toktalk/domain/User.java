@@ -33,7 +33,6 @@ public class User implements Serializable {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
     private String nickname;
-    // private UploadFile uploadFile; TODO 1:1 인데 어떻게 하지
     private LocalDateTime regdate;
 
     @Column(name = "last_seen_at")
@@ -44,7 +43,7 @@ public class User implements Serializable {
 
     @Column(name = "user_status")
     @Enumerated(value = EnumType.STRING)
-    private UserStatus userStatus; //탈퇴 or 활성
+    private UserStatus userStatus;
 
     @JsonManagedReference
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -54,9 +53,6 @@ public class User implements Serializable {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Role> roles = new ArrayList<>();
 
-    @JsonManagedReference
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<OauthInfo> oauthInfos = new ArrayList<>();
 
     public void addChanneUser(ChannelUser channelUser){
         channelUsers.add(channelUser);
@@ -72,10 +68,19 @@ public class User implements Serializable {
         }
     }
 
-    public void addUserOauthInfo(OauthInfo oauthInfo){
-        oauthInfos.add(oauthInfo);
-        if(oauthInfo.getUser() != this){
-            oauthInfo.setUser(this);
-        }
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", email='" + email + '\'' +
+                ", password='" + password + '\'' +
+                ", nickname='" + nickname + '\'' +
+                ", regdate=" + regdate +
+                ", lastSeenAt=" + lastSeenAt +
+                ", deleteDate=" + deleteDate +
+                ", userStatus=" + userStatus +
+                ", channelUsers=" + channelUsers +
+                ", roles=" + roles +
+                '}';
     }
 }

@@ -8,11 +8,11 @@ import java.util.Optional;
 
 public interface UserService{
     User registerUser(User user,UserStatus userStatus);
-    void deleteUser(String email);
+//    void deleteUser(String email);
     User updateNickName(User user,UserDetailsForm detailsForm);
     User findUserByEmail(String email);
-    User findOauthUserByEmail(String email);
-    void updateUserData(User user);
+//    User findOauthUserByEmail(String email);
+//    void updateUserData(User user);
     void disConnectSocial(User user);
     void updatePassword(User user);
 

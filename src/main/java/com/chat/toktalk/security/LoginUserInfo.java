@@ -42,4 +42,11 @@ public class LoginUserInfo extends User implements Serializable {
         this.nickname = name;
     }
 
+    @Override
+    public String toString() {
+        return "LoginUserInfo{" +
+                "id=" + id +
+                ", nickname='" + nickname + '\'' +
+                '}' + super.toString();
+    }
 }
