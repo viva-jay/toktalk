@@ -1,6 +1,6 @@
 package com.chat.toktalk.amqp;
 
-import com.chat.toktalk.config.RabbitConfig;
+import com.chat.toktalk.config.MessageQueueConfig;
 import com.chat.toktalk.dto.SendType;
 import com.chat.toktalk.dto.SocketMessage;
 import com.chat.toktalk.service.RedisService;
@@ -23,7 +23,7 @@ public class MessageListener{
     @Autowired
     RedisService redisService;
 
-    @RabbitListener(queues = RabbitConfig.QUEUE_NAME)
+    @RabbitListener(queues = MessageQueueConfig.QUEUE_NAME)
     public void receiveAndBroadcastMessage(SocketMessage socketMessage){
 
         if (SendType.CHANNEL_MARK == socketMessage.getType() || SendType.CHANNEL_JOINED == socketMessage.getType()) {
