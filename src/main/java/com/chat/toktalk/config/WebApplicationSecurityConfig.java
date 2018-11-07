@@ -1,8 +1,7 @@
 package com.chat.toktalk.config;
 
-import com.chat.toktalk.filter.AlreadyLoginCheckFilter;
+import com.chat.toktalk.config.handler.Oauth2AuthenticationSuccessHandler;
 import com.chat.toktalk.security.TokTalkUserDetailsService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,29 +9,25 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.crypto.factory.PasswordEncoderFactories;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
-import javax.servlet.Filter;
 import javax.sql.DataSource;
 
 @Configuration
 @EnableWebSecurity
 public class WebApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 
-//    private final Filter filter;
     private final TokTalkUserDetailsService tokTalkUserDetailsService;
+    private final Oauth2AuthenticationSuccessHandler successHandler;
     private final DataSource dataSource;
     private static final String REMEMBER_ME_KEY = "cofig-rmkey-BTg2jlnBOQ3lfS5Og5qmFbcfjMl79jfswlaG";
 
-    public WebApplicationSecurityConfig(DataSource dataSource, TokTalkUserDetailsService tokTalkUserDetailsService) {
-//        this.filter = googleFilter;
+    public WebApplicationSecurityConfig(DataSource dataSource, TokTalkUserDetailsService tokTalkUserDetailsService,Oauth2AuthenticationSuccessHandler successHandler) {
         this.dataSource = dataSource;
         this.tokTalkUserDetailsService = tokTalkUserDetailsService;
+        this.successHandler = successHandler;
     }
 
     @Override
@@ -46,6 +41,7 @@ public class WebApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+//        CharacterEncodingFilter filter = new CharacterEncodingFilter();
         http
                 .authorizeRequests()
                     .antMatchers("/identity/**").permitAll()
@@ -64,6 +60,8 @@ public class WebApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
                     .passwordParameter("password")
                 .and()
                     .oauth2Login()
+                    .successHandler(successHandler)
+                    .failureHandler((request,response,authentication)->response.sendRedirect("/error"))
                 .and()
                     .logout()
                     .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
@@ -76,16 +74,16 @@ public class WebApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
                     .tokenValiditySeconds(24 * 60 * 60) //1day
                     .tokenRepository(persistentTokenRepository())
                 .and()
-                    .addFilterBefore(new AlreadyLoginCheckFilter(), BasicAuthenticationFilter.class)
 //                    .addFilterBefore(filter, BasicAuthenticationFilter.class)
                     .csrf().disable();
         }
 
 
-    @Bean
-    public UserAuthenticationSuccessHandler userAuthenticationSuccessHandler() {
-        return new UserAuthenticationSuccessHandler();
-    }
+//    @Bean
+//    public UserAuthenticationSuccessHandler userAuthenticationSuccessHandler() {
+//        return new UserAuthenticationSuccessHandler();
+//    }
+
 
     @Bean
     public PersistentTokenRepository persistentTokenRepository() {

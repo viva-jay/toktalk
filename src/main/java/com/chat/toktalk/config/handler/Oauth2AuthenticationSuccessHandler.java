@@ -1,9 +1,8 @@
-package com.chat.toktalk.config;
+package com.chat.toktalk.config.handler;
 
 import com.chat.toktalk.domain.User;
 import com.chat.toktalk.security.LoginUserInfo;
 import com.chat.toktalk.service.UserService;
-import com.nimbusds.jose.proc.SecurityContext;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
